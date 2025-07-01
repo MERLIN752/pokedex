@@ -4,7 +4,6 @@ import App from './App.vue'
 import PokemonList from './components/PokemonList.vue'
 import PokemonDetail from './components/PokemonDetail.vue'
 import Favorites from './components/Favorites.vue'
-import EvolutionChain from "./components/EvolutionChain.vue";
 
 const routes = [
     { path: '/', component: PokemonList, props: route => ({ ...route.query }) },
@@ -12,7 +11,7 @@ const routes = [
     { path: '/favorites', component: Favorites },
     {
         path: '/evolution-chain/:id',
-        component: EvolutionChain
+        component: PokemonList
     }
 ]
 
