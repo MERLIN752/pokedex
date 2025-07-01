@@ -47,7 +47,7 @@
           @click="openDetails(pokemon)"
           style="cursor: pointer"
       >
-        <img :src="pokemon.image" :alt="pokemon.name" />
+        <img :src="pokemon.image" :alt="pokemon.name" loading="lazy" />
         <div class="pokemon-info">
           <h3>{{ pokemon.name }}</h3>
           <p>Types : {{ pokemon.types.join(', ') }}</p>
@@ -56,15 +56,17 @@
       </div>
     </div>
 
-    <div v-if="loading" class="loading">Chargement...</div>
+    <div v-if="loading" class="loading-overlay">
+      <p>Chargement de tous les Pokémon... (cela peut prendre quelques secondes)</p>
+    </div>
     <div v-if="!hasMore && !filtersActive" class="end">Tous les Pokémon sont chargés.</div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { usePokemonApi } from '../composables/usePokemonApi'
-import { useRoute, useRouter } from 'vue-router'
+import {computed, onMounted, ref, watch} from 'vue'
+import {usePokemonApi} from '../composables/usePokemonApi'
+import {useRoute, useRouter} from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
@@ -180,6 +182,14 @@ const filteredPokemons = computed(() => {
   return result
 })
 
+const loadOnlyEvolutionChain = async (ids) => {
+  loading.value = true
+  allPokemons.value = await Promise.all(ids.map(id => fetchPokemonDetails(id)))
+  allLoaded.value = true
+  loading.value = false
+}
+
+
 onMounted(async () => {
   types.value = await fetchTypes()
 
@@ -189,8 +199,7 @@ onMounted(async () => {
     const details = await fetchPokemonDetails(evoId)
     evolutionChainFilter.value = details.evolutionChain.map(e => parseInt(e.id))
 
-    // Charger tous les Pokémon pour pouvoir filtrer la lignée
-    await loadAllPokemons()
+    await loadOnlyEvolutionChain(evolutionChainFilter.value)
   } else {
     await loadMorePokemons()
   }
@@ -330,9 +339,10 @@ watch(evolutionChainFilter, (val) => {
   font-size: 1.1rem;
 }
 
-.loading, .end {
+.loading-overlay {
   text-align: center;
   margin-top: 2rem;
   font-weight: bold;
+  color: #555;
 }
 </style>
